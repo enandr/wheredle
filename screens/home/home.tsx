@@ -102,6 +102,7 @@ export default function HomeScreen({ navigation }) {
             AsyncStorage.setItem('totalGuesses', totalGuesses.current + '');
             AsyncStorage.setItem('correctAnswer', location.answer);
             AsyncStorage.setItem('lastPlayed', getTodaysDate());
+            navigation.navigate('Win');
         }
         setTimeout(() => {
             if (gameStatus === status.PENDING) {
