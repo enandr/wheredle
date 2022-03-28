@@ -8,7 +8,11 @@ import {
     Image,
     Alert,
     TouchableOpacity,
-    Modal, ScrollView, Platform
+    Modal,
+    ScrollView,
+    Platform,
+    StatusBar,
+    SafeAreaView
 } from "react-native";
 const loadingImage = require('../../assets/loading.gif')
 //import Modal from 'modal-react-native-web';
@@ -116,7 +120,7 @@ export default function HomeScreen({ navigation }) {
         },100)
     }
     return (
-
+        <SafeAreaView style={[styles.container]}>
             <TouchableWithoutFeedback
                 onPress={() => {
                     if (Platform.OS === 'web') {
@@ -126,7 +130,7 @@ export default function HomeScreen({ navigation }) {
                     }
                 }}
             >
-                <View style={[styles.container, Platform.OS === 'ios' ? {paddingTop: 50} : null]}>
+                <View style={[styles.container]}>
                     <TouchableOpacity onPress={() => {
                         setModalVisible(true);
                     }}>
@@ -208,6 +212,8 @@ export default function HomeScreen({ navigation }) {
                     </Modal>
                 </View>
             </TouchableWithoutFeedback>
+        </SafeAreaView>
+
 
 
     )
