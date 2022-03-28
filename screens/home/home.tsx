@@ -137,7 +137,7 @@ export default function HomeScreen({ navigation }) {
                     maxLength={6}
                     editable={location.location !== '' && gameStatus === status.PENDING}
                     onChangeText={(value: string) => {
-                        value = value.toUpperCase();
+                        value = value.toUpperCase().slice(0,6).replace(/[^A-Z]/g, "");
                         setGuess(value);
                     }}
                     onKeyPress={(e: any) => {
@@ -181,16 +181,16 @@ export default function HomeScreen({ navigation }) {
                     visible={modalVisible}
                     onDismiss={() => {
                     }}>
-                    <View style={{marginTop: 22}}>
+                    <View style={[{paddingTop: 22}, styles.container]}>
                         <View>
-                            <Text>Welcome To Where-dle</Text>
-                            <Text>HOW TO PLAY:</Text>
-                            <Text>Each City Is 6 Letters Long</Text>
-                            <Text>Type In Your Guess</Text>
-                            <Text>A RED Letter Means That Letter Is NOT In The Word</Text>
-                            <Text>An ORANGE Letter Means That Letter Is In The Word But Wrong Spot</Text>
-                            <Text>A GREEN Letter Means That Letter Is Correct</Text>
-                            <Text>You Can Play Once Daily And Have 6 Tries To Win</Text>
+                            <Text style={{color: colorPallete.textLight}}>Welcome To Where-dle</Text>
+                            <Text style={{color: colorPallete.textLight}}>HOW TO PLAY:</Text>
+                            <Text style={{color: colorPallete.textLight}}>Each City Is 6 Letters Long</Text>
+                            <Text style={{color: colorPallete.textLight}}>Type In Your Guess</Text>
+                            <Text style={{color: colorPallete.textLight}}>A RED Letter Means That Letter Is NOT In The Word</Text>
+                            <Text style={{color: colorPallete.textLight}}>An ORANGE Letter Means That Letter Is In The Word But Wrong Spot</Text>
+                            <Text style={{color: colorPallete.textLight}}>A GREEN Letter Means That Letter Is Correct</Text>
+                            <Text style={{color: colorPallete.textLight}}>You Can Play Once Daily And Have 6 Tries To Win</Text>
                             <Button text={'Close Help'} onPress={
                                 () => {
                                     setModalVisible(false)}
