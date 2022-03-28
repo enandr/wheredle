@@ -7,9 +7,11 @@ import {
     TextInput,
     Image,
     Alert,
-    TouchableOpacity
+    TouchableOpacity,
+    Modal, ScrollView, Platform
 } from "react-native";
-import Modal from 'modal-react-native-web';
+const loadingImage = require('../../assets/loading.gif')
+//import Modal from 'modal-react-native-web';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {Button} from "../../components";
 import colorPallete from "../../constants/colors";
@@ -31,7 +33,7 @@ export default function HomeScreen({ navigation }) {
         location: '',
         date: '',
         answer: '',
-        image: ''
+        image: '../../assets/loading.gif'
     });
     const inputRef  = useRef();
     const getData = async () => {
@@ -114,92 +116,100 @@ export default function HomeScreen({ navigation }) {
         },100)
     }
     return (
-        <TouchableWithoutFeedback
-            onPress={() => {
-                inputRef?.current?.focus();
-            }}
-        >
-            <View style={styles.container}>
-                <TouchableOpacity onPress={() => {
-                    setModalVisible(true);
-                }}>
-                    <Text style={styles.helpText}>How To Play?</Text>
-                </TouchableOpacity>
-                <Image style={{width: '100%', height: '50%'}} source={{uri:location.image}}/>
-                <TextInput
-                    ref={inputRef}
-                    style={styles.input}
-                    placeholder={"Guess The Location"}
-                    placeholderTextColor={'#808e9b'}
-                    autoCapitalize={'characters'}
-                    autoFocus={true}
-                    value={guess}
-                    maxLength={6}
-                    editable={location.location !== '' && gameStatus === status.PENDING}
-                    onChangeText={(value: string) => {
-                        value = value.toUpperCase().slice(0,6).replace(/[^A-Z]/g, "");
-                        setGuess(value);
-                    }}
-                    onKeyPress={(e: any) => {
-                        if (e.keyCode === 13 && canGuess) {
-                            if (guess.length == 6) {
-                                onSubmit();
-                            } else {
-                                setTimeout(() => {
-                                    inputRef?.current?.focus();
-                                },100)
-                            }
-                        }
-                    }}
-                />
-                <Button
-                    disabled={!canGuess}
-                    text={'Submit'}
-                    onPress={() => {
-                        if (guess.length == 6 && canGuess) {
-                            onSubmit();
-                        }
-                    }}
-                />
-                <View>
-                    {guessHistory.map((guess: any, index: number) => {
-                        return (
-                            <Text key={index} style={styles.text}>
-                                <Text style={styles[guess[0].accuracy]}>{guess[0].guess}</Text>
-                                <Text style={styles[guess[1].accuracy]}>{guess[1].guess}</Text>
-                                <Text style={styles[guess[2].accuracy]}>{guess[2].guess}</Text>
-                                <Text style={styles[guess[3].accuracy]}>{guess[3].guess}</Text>
-                                <Text style={styles[guess[4].accuracy]}>{guess[4].guess}</Text>
-                                <Text style={styles[guess[5].accuracy]}>{guess[5].guess}</Text>
-                            </Text>
-                        );
-                    })}
-                </View>
-                <Modal
-                    animationType="slide"
-                    transparent={false}
-                    visible={modalVisible}
-                    onDismiss={() => {
+
+            <TouchableWithoutFeedback
+                onPress={() => {
+                    if (Platform.OS === 'web') {
+                        inputRef?.current?.focus();
+                    } else {
+                        inputRef?.current?.blur();
+                    }
+                }}
+            >
+                <View style={[styles.container, Platform.OS === 'ios' ? {paddingTop: 50} : null]}>
+                    <TouchableOpacity onPress={() => {
+                        setModalVisible(true);
                     }}>
-                    <View style={[{paddingTop: 22}, styles.container]}>
-                        <View>
-                            <Text style={{color: colorPallete.textLight}}>Welcome To Where-dle</Text>
-                            <Text style={{color: colorPallete.textLight}}>HOW TO PLAY:</Text>
-                            <Text style={{color: colorPallete.textLight}}>Each City Is 6 Letters Long</Text>
-                            <Text style={{color: colorPallete.textLight}}>Type In Your Guess</Text>
-                            <Text style={{color: colorPallete.textLight}}>A RED Letter Means That Letter Is NOT In The Word</Text>
-                            <Text style={{color: colorPallete.textLight}}>An ORANGE Letter Means That Letter Is In The Word But Wrong Spot</Text>
-                            <Text style={{color: colorPallete.textLight}}>A GREEN Letter Means That Letter Is Correct</Text>
-                            <Text style={{color: colorPallete.textLight}}>You Can Play Once Daily And Have 6 Tries To Win</Text>
-                            <Button text={'Close Help'} onPress={
-                                () => {
-                                    setModalVisible(false)}
-                            } />
-                        </View>
+                        <Text style={styles.helpText}>How To Play?</Text>
+                    </TouchableOpacity>
+
+                    <Image style={{width: '100%', height: '50%'}} source={{uri:location.image}}/>
+                    <TextInput
+                        ref={inputRef}
+                        style={styles.input}
+                        placeholder={"Guess The Location"}
+                        placeholderTextColor={'#808e9b'}
+                        autoCapitalize={'characters'}
+                        autoFocus={true}
+                        value={guess}
+                        maxLength={6}
+                        editable={location.location !== '' && gameStatus === status.PENDING}
+                        onChangeText={(value: string) => {
+                            value = value.toUpperCase().slice(0,6).replace(/[^A-Z]/g, "");
+                            setGuess(value);
+                        }}
+                        onKeyPress={(e: any) => {
+                            if (e.keyCode === 13 && canGuess) {
+                                if (guess.length == 6) {
+                                    onSubmit();
+                                } else {
+                                    setTimeout(() => {
+                                        inputRef?.current?.focus();
+                                    },100)
+                                }
+                            }
+                        }}
+                    />
+                    <Button
+                        disabled={!canGuess}
+                        text={'Submit'}
+                        onPress={() => {
+                            if (guess.length == 6 && canGuess) {
+                                onSubmit();
+                            }
+                        }}
+                    />
+                    <View>
+                        {guessHistory.map((guess: any, index: number) => {
+                            return (
+                                <Text key={index} style={styles.text}>
+                                    <Text style={styles[guess[0].accuracy]}>{guess[0].guess}</Text>
+                                    <Text style={styles[guess[1].accuracy]}>{guess[1].guess}</Text>
+                                    <Text style={styles[guess[2].accuracy]}>{guess[2].guess}</Text>
+                                    <Text style={styles[guess[3].accuracy]}>{guess[3].guess}</Text>
+                                    <Text style={styles[guess[4].accuracy]}>{guess[4].guess}</Text>
+                                    <Text style={styles[guess[5].accuracy]}>{guess[5].guess}</Text>
+                                </Text>
+                            );
+                        })}
                     </View>
-                </Modal>
-            </View>
-        </TouchableWithoutFeedback>
+                    <Modal
+                        animationType="slide"
+                        transparent={false}
+                        visible={modalVisible}
+                        onDismiss={() => {
+                        }}>
+                        <View  style={[styles.container, Platform.OS === 'ios' ? {paddingTop: 50} : null]}>
+                            <View>
+                                <Text style={{color: colorPallete.textLight}}>Welcome To Where-dle</Text>
+                                <Text style={{color: colorPallete.textLight}}>HOW TO PLAY:</Text>
+                                <Text style={{color: colorPallete.textLight}}>Each City Is 6 Letters Long</Text>
+                                <Text style={{color: colorPallete.textLight}}>Type In Your Guess</Text>
+                                <Text style={{color: colorPallete.textLight}}>A RED Letter Means That Letter Is NOT In The Word</Text>
+                                <Text style={{color: colorPallete.textLight}}>An ORANGE Letter Means That Letter Is In The Word But Wrong Spot</Text>
+                                <Text style={{color: colorPallete.textLight}}>A GREEN Letter Means That Letter Is Correct</Text>
+                                <Text style={{color: colorPallete.textLight}}>You Can Play Once Daily And Have 6 Tries To Win</Text>
+                                <Button text={'Close Help'} onPress={
+                                    () => {
+                                        setModalVisible(false)}
+                                } />
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
+            </TouchableWithoutFeedback>
+
+
     )
 }
 const styles = StyleSheet.create({
