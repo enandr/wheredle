@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "eject": "expo eject"
+    "eject": "expo eject",
+    "buildAndPush": "expo build:web && git add . && git commit -m \"built for web\" && git push"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.17.0",
@@ -19,6 +20,7 @@
     "react-native": "0.64.3",
     "react-native-gesture-handler": "~2.1.0",
     "react-native-reanimated": "^2.5.0",
+    "react-native-restart": "^0.0.24",
     "react-native-web": "0.17.1"
   },
   "devDependencies": {
