@@ -1,4 +1,4 @@
-import {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
     Text,
     View,
@@ -6,8 +6,10 @@ import {
     TouchableWithoutFeedback,
     TextInput,
     Image,
-    Alert
+    Alert,
+    TouchableOpacity
 } from "react-native";
+import Modal from 'modal-react-native-web';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {Button} from "../../components";
 import colorPallete from "../../constants/colors";
@@ -19,6 +21,7 @@ const status = {
     PENDING: 'pending'
 }
 export default function HomeScreen({ navigation }) {
+    const [modalVisible, setModalVisible] = useState(false);
     const [guess, setGuess] = useState('');
     const [guessHistory, setGuessHistory] = useState([]);
     const [gameStatus, setGameStatus] = useState(status.PENDING);
@@ -117,6 +120,11 @@ export default function HomeScreen({ navigation }) {
             }}
         >
             <View style={styles.container}>
+                <TouchableOpacity onPress={() => {
+                    setModalVisible(true);
+                }}>
+                    <Text style={styles.helpText}>How To Play?</Text>
+                </TouchableOpacity>
                 <Image style={{width: '100%', height: '50%'}} source={{uri:location.image}}/>
                 <TextInput
                     ref={inputRef}
@@ -167,6 +175,29 @@ export default function HomeScreen({ navigation }) {
                         );
                     })}
                 </View>
+                <Modal
+                    animationType="slide"
+                    transparent={false}
+                    visible={modalVisible}
+                    onDismiss={() => {
+                    }}>
+                    <View style={{marginTop: 22}}>
+                        <View>
+                            <Text>Welcome To Where-dle</Text>
+                            <Text>HOW TO PLAY:</Text>
+                            <Text>Each City Is 6 Letters Long</Text>
+                            <Text>Type In Your Guess</Text>
+                            <Text>A RED Letter Means That Letter Is NOT In The Word</Text>
+                            <Text>An ORANGE Letter Means That Letter Is In The Word But Wrong Spot</Text>
+                            <Text>A GREEN Letter Means That Letter Is Correct</Text>
+                            <Text>You Can Play Once Daily And Have 6 Tries To Win</Text>
+                            <Button text={'Close Help'} onPress={
+                                () => {
+                                    setModalVisible(false)}
+                            } />
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </TouchableWithoutFeedback>
     )
@@ -174,7 +205,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 50,
+        paddingTop: 10,
         paddingHorizontal: 20,
         backgroundColor: colorPallete.darkGrey
     },
@@ -202,5 +233,12 @@ const styles = StyleSheet.create({
     },
     wrong: {
         color: 'red'
-    }
+    },
+    helpText: {
+        alignSelf: 'center',
+        color: colorPallete.pink,
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 10
+    },
 });
