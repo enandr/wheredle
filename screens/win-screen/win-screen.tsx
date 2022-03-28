@@ -39,7 +39,7 @@ export default function WinScreen({ navigation }) {
     return (
        <View style={styles.container}>
            <Text style={styles.text}>
-               {gameStatus === 'won' ? 'CONGRATULATIONS. YOU WON!!!!' : 'SORRY, YOU LOST'};
+               {gameStatus === 'won' ? 'CONGRATULATIONS. YOU WON!!!!' : 'SORRY, YOU LOST'}
            </Text>
            <Text style={styles.text}>
                Correct Answer:
