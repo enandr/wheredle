@@ -6,16 +6,11 @@ import {
     TouchableWithoutFeedback,
     TextInput,
     Image,
-    Alert,
     TouchableOpacity,
     Modal,
-    ScrollView,
     Platform,
-    StatusBar,
     SafeAreaView
 } from "react-native";
-const loadingImage = require('../../assets/loading.gif')
-//import Modal from 'modal-react-native-web';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {Button} from "../../components";
 import colorPallete from "../../constants/colors";
@@ -26,20 +21,20 @@ const status = {
     LOST: 'lost',
     PENDING: 'pending'
 }
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({navigation}: {navigation: any}) {
     const [modalVisible, setModalVisible] = useState(false);
     const [guess, setGuess] = useState('');
-    const [guessHistory, setGuessHistory] = useState([]);
+    const [guessHistory, setGuessHistory] = useState<any[]>([]);
     const [gameStatus, setGameStatus] = useState(status.PENDING);
     const [canGuess, setCanGuess] = useState(false);
-    const totalGuesses = useRef(0);
+    const totalGuesses = useRef<any>(0);
     const [location, setLocation] = useState<GuessableLocation>({
         location: '',
         date: '',
         answer: '',
         image: '../../assets/loading.gif'
     });
-    const inputRef  = useRef();
+    const inputRef = useRef<any>();
     const getData = async () => {
         try {
             const valueStatus = await AsyncStorage.getItem('lastPlayed');
@@ -60,7 +55,7 @@ export default function HomeScreen({ navigation }) {
     }
     useEffect(() => {
         const fullDate = getTodaysDate();
-        const theLocation: GuessableLocation = data.find(location => location.date === fullDate);
+        const theLocation: GuessableLocation = data.find(location => location ? location.date === fullDate : undefined);
         getData().then(result => {
             if (result !== null && fullDate === result) {
                 navigation.navigate('Win');
@@ -85,10 +80,10 @@ export default function HomeScreen({ navigation }) {
         const newGuessHistory = [];
         let totalCorrect = 0;
         for (let i = 0; i < 6; i++) {
-            if (guess[i] === location.answer[i]) {
+            if (guess[i] === location?.answer[i]) {
                 guessAccuracy.push({guess: guess[i], accuracy: 'correct'});
                 totalCorrect += 1;
-            } else if (location.answer.includes(guess[i])) {
+            } else if (location?.answer.includes(guess[i])) {
                 guessAccuracy.push({guess: guess[i], accuracy: 'wrongLocation'});
             } else {
                 guessAccuracy.push({guess: guess[i], accuracy: 'wrong'});
@@ -101,7 +96,7 @@ export default function HomeScreen({ navigation }) {
             setGameStatus(status.WON);
             AsyncStorage.setItem('gameStatus', status.WON);
             AsyncStorage.setItem('totalGuesses', totalGuesses.current + '');
-            AsyncStorage.setItem('correctAnswer', location.answer);
+            AsyncStorage.setItem('correctAnswer', location?.answer || '');
             AsyncStorage.setItem('lastPlayed', getTodaysDate());
             navigation.navigate('Win');
         }
@@ -109,7 +104,7 @@ export default function HomeScreen({ navigation }) {
             setGameStatus(status.LOST);
             AsyncStorage.setItem('gameStatus', status.LOST);
             AsyncStorage.setItem('totalGuesses', totalGuesses.current + '');
-            AsyncStorage.setItem('correctAnswer', location.answer);
+            AsyncStorage.setItem('correctAnswer', location?.answer || '');
             AsyncStorage.setItem('lastPlayed', getTodaysDate());
             navigation.navigate('Win');
         }
@@ -137,7 +132,7 @@ export default function HomeScreen({ navigation }) {
                         <Text style={styles.helpText}>How To Play?</Text>
                     </TouchableOpacity>
 
-                    <Image style={{width: '100%', height: '50%'}} source={{uri:location.image}}/>
+                    <Image style={{width: '100%', height: '50%'}} source={{uri:location?.image}}/>
                     <TextInput
                         ref={inputRef}
                         style={styles.input}
@@ -147,7 +142,7 @@ export default function HomeScreen({ navigation }) {
                         autoFocus={true}
                         value={guess}
                         maxLength={6}
-                        editable={location.location !== '' && gameStatus === status.PENDING}
+                        editable={location?.location !== '' && gameStatus === status.PENDING}
                         onChangeText={(value: string) => {
                             value = value.toUpperCase().slice(0,6).replace(/[^A-Z]/g, "");
                             setGuess(value);
@@ -174,7 +169,7 @@ export default function HomeScreen({ navigation }) {
                         }}
                     />
                     <View>
-                        {guessHistory.map((guess: any, index: number) => {
+                        {guessHistory.map((guess: {accuracy: 'correct' | 'wrongLocation' | 'wrong', guess: string}[], index: number) => {
                             return (
                                 <Text key={index} style={styles.text}>
                                     <Text style={styles[guess[0].accuracy]}>{guess[0].guess}</Text>

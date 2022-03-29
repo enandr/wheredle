@@ -8,15 +8,11 @@ import {
 import {Button} from "../../components";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import colorPallete from "../../constants/colors";
-import RNRestart from 'react-native-restart';
 
-export default function WinScreen({ navigation }) {
+export default function WinScreen() {
     const [correctAnswer, setCa] = useState('');
     const [totalGuesses, setTg] = useState('');
     const [gameStatus, setGs] = useState('');
-
-    /*let correctAnswer = '';
-    let totalGuesses = '';*/
 
     const getData = async () => {
         try {

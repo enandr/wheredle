@@ -3,7 +3,7 @@ type GuessableLocation = {
     date: string;
     answer: string;
     image: string;
-}
+} | undefined
 
 export {
     GuessableLocation
