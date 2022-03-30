@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     Modal,
     Platform,
-    SafeAreaView
+    SafeAreaView, Keyboard
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {Button} from "../../components";
@@ -27,7 +27,10 @@ export default function HomeScreen({navigation}: {navigation: any}) {
     const [guessHistory, setGuessHistory] = useState<any[]>([]);
     const [gameStatus, setGameStatus] = useState(status.PENDING);
     const [canGuess, setCanGuess] = useState(false);
+    const [timeTillNewGame, setTimeTillNewGame] = useState('');
     const totalGuesses = useRef<any>(0);
+    const guessLength = useRef<number>(0);
+    const spaceCount = useRef<number>(0);
     const [location, setLocation] = useState<GuessableLocation>({
         location: '',
         date: '',
@@ -35,9 +38,16 @@ export default function HomeScreen({navigation}: {navigation: any}) {
         image: '../../assets/loading.gif'
     });
     const inputRef = useRef<any>();
+    const intervalRef = useRef<any>();
     const getData = async () => {
         try {
+            const valueGuesses = await AsyncStorage.getItem('totalGuesses');
+            const valueGameStatus = await AsyncStorage.getItem('gameStatus');
             const valueStatus = await AsyncStorage.getItem('lastPlayed');
+            if(valueGuesses !== null && valueGameStatus !== null) {
+                totalGuesses.current = valueGuesses;
+                setGameStatus(valueGameStatus);
+            }
             return valueStatus;
         } catch(e) {
             return null;
@@ -58,7 +68,7 @@ export default function HomeScreen({navigation}: {navigation: any}) {
         const theLocation: GuessableLocation = data.find(location => location ? location.date === fullDate : undefined);
         getData().then(result => {
             if (result !== null && fullDate === result) {
-                navigation.navigate('Win');
+                //navigation.navigate('Win');
                 return;
             } else {
                 AsyncStorage.clear();
@@ -66,9 +76,22 @@ export default function HomeScreen({navigation}: {navigation: any}) {
         });
         setLocation(theLocation);
         inputRef?.current?.focus();
+        intervalRef.current = setInterval(() => {
+            const now = new Date();
+            const hoursleft = 23-now.getHours();
+            const minutesleft = 59-now.getMinutes();
+            const secondsleft = 59-now.getSeconds();
+            let minutesleftString = '';
+            let secondsleftString = '';
+            minutesleft < 10 ? minutesleftString = '0' + minutesleft : minutesleftString = '' + minutesleft;
+            secondsleft < 10 ? secondsleftString = '0' + secondsleft : secondsleftString = '' + secondsleft;
+            setTimeTillNewGame(`${hoursleft}:${minutesleftString}:${secondsleftString}`);
+        },1000)
     },[])
     useEffect(() => {
-        if (guess.length === 6 && gameStatus === status.PENDING) {
+        spaceCount.current = (guess.split(" ").length - 1);
+        guessLength.current = guess.length - spaceCount.current;
+        if (guessLength.current === 6 && gameStatus === status.PENDING) {
             setCanGuess(true);
         } else {
             setCanGuess(false);
@@ -76,21 +99,25 @@ export default function HomeScreen({navigation}: {navigation: any}) {
     },[guess])
 
     const onSubmit = () => {
+        Keyboard.dismiss();
         const guessAccuracy = [];
         const newGuessHistory = [];
         let totalCorrect = 0;
+        const currentGuess = guess.toUpperCase().replace(/[^A-Z]/g, "")
         for (let i = 0; i < 6; i++) {
-            if (guess[i] === location?.answer[i]) {
-                guessAccuracy.push({guess: guess[i], accuracy: 'correct'});
+            if (currentGuess[i] === location?.answer[i]) {
+                guessAccuracy.push({guess: currentGuess[i], accuracy: 'correct'});
                 totalCorrect += 1;
             } else if (location?.answer.includes(guess[i])) {
-                guessAccuracy.push({guess: guess[i], accuracy: 'wrongLocation'});
+                guessAccuracy.push({guess: currentGuess[i], accuracy: 'wrongLocation'});
             } else {
-                guessAccuracy.push({guess: guess[i], accuracy: 'wrong'});
+                guessAccuracy.push({guess: currentGuess[i], accuracy: 'wrong'});
             }
         }
         guessHistory.push(guessAccuracy);
         setGuess('');
+        spaceCount.current = 0
+        guessLength.current = 0;
         totalGuesses.current += 1;
         if (totalCorrect === 6) {
             setGameStatus(status.WON);
@@ -98,7 +125,8 @@ export default function HomeScreen({navigation}: {navigation: any}) {
             AsyncStorage.setItem('totalGuesses', totalGuesses.current + '');
             AsyncStorage.setItem('correctAnswer', location?.answer || '');
             AsyncStorage.setItem('lastPlayed', getTodaysDate());
-            navigation.navigate('Win');
+            //navigation.navigate('Win');
+            return;
         }
         if (totalCorrect !== 6 && totalGuesses.current === 6) {
             setGameStatus(status.LOST);
@@ -106,7 +134,8 @@ export default function HomeScreen({navigation}: {navigation: any}) {
             AsyncStorage.setItem('totalGuesses', totalGuesses.current + '');
             AsyncStorage.setItem('correctAnswer', location?.answer || '');
             AsyncStorage.setItem('lastPlayed', getTodaysDate());
-            navigation.navigate('Win');
+            //navigation.navigate('Win');
+            return;
         }
         setTimeout(() => {
             if (gameStatus === status.PENDING) {
@@ -133,55 +162,82 @@ export default function HomeScreen({navigation}: {navigation: any}) {
                     </TouchableOpacity>
 
                     <Image style={{width: '100%', height: '50%'}} source={{uri:location?.image}}/>
-                    <TextInput
-                        ref={inputRef}
-                        style={styles.input}
-                        placeholder={"Guess The Location"}
-                        placeholderTextColor={'#808e9b'}
-                        autoCapitalize={'characters'}
-                        autoFocus={true}
-                        value={guess}
-                        maxLength={6}
-                        editable={location?.location !== '' && gameStatus === status.PENDING}
-                        onChangeText={(value: string) => {
-                            value = value.toUpperCase().slice(0,6).replace(/[^A-Z]/g, "");
-                            setGuess(value);
-                        }}
-                        onKeyPress={(e: any) => {
-                            if (e.keyCode === 13 && canGuess) {
-                                if (guess.length == 6) {
-                                    onSubmit();
-                                } else {
-                                    setTimeout(() => {
-                                        inputRef?.current?.focus();
-                                    },100)
-                                }
-                            }
-                        }}
-                    />
-                    <Button
-                        disabled={!canGuess}
-                        text={'Submit'}
-                        onPress={() => {
-                            if (guess.length == 6 && canGuess) {
-                                onSubmit();
-                            }
-                        }}
-                    />
-                    <View>
-                        {guessHistory.map((guess: {accuracy: 'correct' | 'wrongLocation' | 'wrong', guess: string}[], index: number) => {
-                            return (
-                                <Text key={index} style={styles.text}>
-                                    <Text style={styles[guess[0].accuracy]}>{guess[0].guess}</Text>
-                                    <Text style={styles[guess[1].accuracy]}>{guess[1].guess}</Text>
-                                    <Text style={styles[guess[2].accuracy]}>{guess[2].guess}</Text>
-                                    <Text style={styles[guess[3].accuracy]}>{guess[3].guess}</Text>
-                                    <Text style={styles[guess[4].accuracy]}>{guess[4].guess}</Text>
-                                    <Text style={styles[guess[5].accuracy]}>{guess[5].guess}</Text>
+                    {gameStatus === status.PENDING ? (
+                        <View>
+                            <TextInput
+                                ref={inputRef}
+                                style={styles.input}
+                                placeholder={"Guess The Location"}
+                                placeholderTextColor={'#808e9b'}
+                                autoCapitalize={'characters'}
+                                autoFocus={true}
+                                value={guess}
+                                maxLength={6 + spaceCount.current}
+                                editable={location?.location !== '' && gameStatus === status.PENDING}
+                                onChangeText={(value: string) => {
+                                    value = value.toUpperCase().slice(0,6 + spaceCount.current).replace(/[^A-Z ]/g, "");
+                                    setGuess(value);
+                                }}
+                                onKeyPress={(e: any) => {
+                                    if (e.keyCode === 13 && canGuess) {
+                                        if (guess.length == 6) {
+                                            onSubmit();
+                                        } else {
+                                            setTimeout(() => {
+                                                inputRef?.current?.focus();
+                                            },100)
+                                        }
+                                    }
+                                }}
+                            />
+                            <Button
+                                disabled={!canGuess}
+                                text={'Submit'}
+                                onPress={() => {
+                                    if (guessLength.current === 6 && canGuess) {
+                                        onSubmit();
+                                    }
+                                }}
+                            />
+                            <View>
+                                {guessHistory.map((guess: {accuracy: 'correct' | 'wrongLocation' | 'wrong', guess: string}[], index: number) => {
+                                    return (
+                                        <Text key={index} style={styles.text}>
+                                            <Text style={styles[guess[0].accuracy]}>{guess[0].guess}</Text>
+                                            <Text style={styles[guess[1].accuracy]}>{guess[1].guess}</Text>
+                                            <Text style={styles[guess[2].accuracy]}>{guess[2].guess}</Text>
+                                            <Text style={styles[guess[3].accuracy]}>{guess[3].guess}</Text>
+                                            <Text style={styles[guess[4].accuracy]}>{guess[4].guess}</Text>
+                                            <Text style={styles[guess[5].accuracy]}>{guess[5].guess}</Text>
+                                        </Text>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                    ) : (
+                        <View style={{marginTop: 20}}>
+                        <Text style={styles.textGameOver}>
+                            {gameStatus === 'won' ? 'CONGRATULATIONS. YOU WON!!!!' : 'SORRY, YOU LOST'}
+                        </Text>
+                        <Text style={styles.textGameOver}>
+                            Correct Answer:
+                            <Text style={styles.correctGameOver}>
+                                {` ${location?.answer}`}
+                            </Text>
+                        </Text>
+                        <Text style={styles.textGameOver}>
+                            Total Guesses:
+                            <Text style={styles.wrongLocationGameOver}>
+                                {` ${totalGuesses.current}`}
+                            </Text>
+                        </Text>
+                            <Text style={styles.textGameOver}>
+                                Time To New Game:
+                                <Text style={styles.textTimeLeftGameOver}>
+                                    {` ${timeTillNewGame}`}
                                 </Text>
-                            );
-                        })}
-                    </View>
+                            </Text>
+                    </View>)}
                     <Modal
                         animationType="slide"
                         transparent={false}
@@ -226,6 +282,12 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         color: colorPallete.textLight
     },
+    textGameOver: {
+        fontSize: 20,
+        fontWeight:'900',
+        alignSelf: 'flex-start',
+        color: colorPallete.textLight
+    },
     input: {
         width: '100%',
         height: 50,
@@ -252,4 +314,16 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginBottom: 10
     },
+    correctGameOver: {
+        color: 'green'
+    },
+    wrongLocationGameOver: {
+        color: 'orange',
+    },
+    wrongGameOver: {
+        color: 'red'
+    },
+    textTimeLeftGameOver: {
+        color: 'lightblue'
+    }
 });

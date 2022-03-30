@@ -42,7 +42,6 @@ export default function WinScreen() {
                <Text style={styles.correct}>
                    {` ${correctAnswer}`}
                </Text>
-
            </Text>
            <Text style={styles.text}>
                Total Guesses:
@@ -50,12 +49,10 @@ export default function WinScreen() {
                    {` ${totalGuesses}`}
                </Text>
            </Text>
-           {Platform.OS === 'web' ? (
                <Button text={'TEMPORARY BUTTON TO RESET APP'} onPress={() => {
                    AsyncStorage.clear();
-                   window.location.reload();
+                   Platform.OS === 'web' ? window.location.reload() : null;
                }}/>
-           ): null}
 
        </View>
     )
