@@ -8,23 +8,11 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "env": {
-        "ANDROID_SDK_ROOT": "/Users/rogerenand/Library/Android/sdk",
-        "JDK": "/Library/Java/JavaVirtualMachines"
-      },
-      "android" : {
-        "image" : "latest"
-      }
+      "distribution": "internal"
     },
     "production": {}
   },
   "submit": {
-    "production": {},
-    "internalTest": {
-      "android": {
-        "releaseStatus": "draft"
-      }
-    }
+    "production": {}
   }
 }

@@ -221,10 +221,10 @@ const styles = StyleSheet.create({
         backgroundColor: colorPallete.darkGrey
     },
     text: {
-            fontSize: 30,
-            fontWeight:'900',
-            alignSelf: 'center',
-            color: colorPallete.textLight
+        fontSize: 30,
+        fontWeight:'900',
+        alignSelf: 'center',
+        color: colorPallete.textLight
     },
     input: {
         width: '100%',
