@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.rogerenand.wheredle",
+      "package": "com.enandr.wheredle",
       "versionCode": 7
     },
     "web": {
