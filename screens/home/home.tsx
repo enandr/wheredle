@@ -71,7 +71,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     return fullDate;
   };
 
+  const getFromFirebase = async () => {};
   useEffect(() => {
+    getFromFirebase();
     const fullDate = getTodaysDate();
     const theLocation: GuessableLocation = data.find((location) =>
       location ? location.date === fullDate : undefined
@@ -298,12 +300,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         <Text style={styles.wrongLocationGameOver}>
           {` ${totalGuesses.current}`}
         </Text>
-      </Text>
-      <Text>
-        {emojis.redSquare}
-        {emojis.orangeSquare}
-        {emojis.greenSquare}
-        {emojis.blackSquare}
       </Text>
       <Text style={styles.textGameOver}>
         Time To New Game:
