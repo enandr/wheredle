@@ -1,10 +1,8 @@
-type GuessableLocation = {
-    location: string;
-    date: string;
-    answer: string;
-    image: string;
-} | undefined
+type GuessableLocation =
+  | {
+      answer: string;
+      image: string;
+    }
+  | undefined;
 
-export {
-    GuessableLocation
-}
+export { GuessableLocation };

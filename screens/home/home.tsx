@@ -20,6 +20,9 @@ import { Button } from "../../components";
 import colorPallete from "../../constants/colors";
 import { GuessableLocation } from "../../constants/types";
 import data from "../../constants/data";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 
 const status = {
   WON: "won",
@@ -37,8 +40,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const guessLength = useRef<number>(0);
   const spaceCount = useRef<number>(0);
   const [location, setLocation] = useState<GuessableLocation>({
-    location: "",
-    date: "",
     answer: "",
     image: "../../assets/loading.gif",
   });
@@ -71,40 +72,56 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     return fullDate;
   };
 
-  const getFromFirebase = async () => {};
+  const getFromFirebase = async (date: string) => {
+    const challengesCollection = await firestore()
+      .collection("challenges")
+      .get();
+    const challenge = await firestore()
+      .collection("challenges")
+      .doc(date.replaceAll("/", "-"))
+      .get()
+      .then((documentSnapshot) => {
+        if (documentSnapshot.exists) {
+          const theLocation: FirebaseFirestoreTypes.DocumentData | undefined =
+            documentSnapshot.data();
+
+          getData().then((result) => {
+            if (result !== null && date === result) {
+              return;
+            } else {
+              AsyncStorage.clear();
+            }
+          });
+          setLocation({
+            answer: theLocation?.answer as string,
+            image: theLocation?.image as string,
+          });
+          inputRef?.current?.focus();
+          intervalRef.current = setInterval(() => {
+            const now = new Date();
+            const hoursleft = 23 - now.getHours();
+            const minutesleft = 59 - now.getMinutes();
+            const secondsleft = 59 - now.getSeconds();
+            let minutesleftString = "";
+            let secondsleftString = "";
+            minutesleft < 10
+              ? (minutesleftString = "0" + minutesleft)
+              : (minutesleftString = "" + minutesleft);
+            secondsleft < 10
+              ? (secondsleftString = "0" + secondsleft)
+              : (secondsleftString = "" + secondsleft);
+            setTimeTillNewGame(
+              `${hoursleft}:${minutesleftString}:${secondsleftString}`
+            );
+          }, 1000);
+          return documentSnapshot.data();
+        }
+      });
+  };
+
   useEffect(() => {
-    getFromFirebase();
     const fullDate = getTodaysDate();
-    const theLocation: GuessableLocation = data.find((location) =>
-      location ? location.date === fullDate : undefined
-    );
-    getData().then((result) => {
-      if (result !== null && fullDate === result) {
-        //navigation.navigate('Win');
-        return;
-      } else {
-        AsyncStorage.clear();
-      }
-    });
-    setLocation(theLocation);
-    inputRef?.current?.focus();
-    intervalRef.current = setInterval(() => {
-      const now = new Date();
-      const hoursleft = 23 - now.getHours();
-      const minutesleft = 59 - now.getMinutes();
-      const secondsleft = 59 - now.getSeconds();
-      let minutesleftString = "";
-      let secondsleftString = "";
-      minutesleft < 10
-        ? (minutesleftString = "0" + minutesleft)
-        : (minutesleftString = "" + minutesleft);
-      secondsleft < 10
-        ? (secondsleftString = "0" + secondsleft)
-        : (secondsleftString = "" + secondsleft);
-      setTimeTillNewGame(
-        `${hoursleft}:${minutesleftString}:${secondsleftString}`
-      );
-    }, 1000);
+    getFromFirebase(fullDate);
   }, []);
 
   useEffect(() => {
@@ -223,7 +240,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         autoFocus={true}
         value={guess}
         maxLength={6 + spaceCount.current}
-        editable={location?.location !== "" && gameStatus === status.PENDING}
+        editable={location?.answer && gameStatus === status.PENDING}
         onChangeText={(value: string) => {
           value = value
             .toUpperCase()
