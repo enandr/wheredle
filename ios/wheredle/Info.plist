@@ -28,6 +28,12 @@
           <string>com.enandr.wheredle</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.671827951220-doc2h1thd3of02127j28rg52e53peb6v</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>

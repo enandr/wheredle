@@ -32,6 +32,7 @@
     },
     "plugins": [
       "@react-native-firebase/app",
+      "@react-native-firebase/firestore"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
