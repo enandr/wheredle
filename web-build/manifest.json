@@ -8,6 +8,10 @@
   "orientation": "portrait",
   "related_applications": [
     {
+      "platform": "itunes",
+      "id": "com.enandr.wheredle"
+    },
+    {
       "platform": "play",
       "url": "http://play.google.com/store/apps/details?id=com.enandr.wheredle",
       "id": "com.enandr.wheredle"
