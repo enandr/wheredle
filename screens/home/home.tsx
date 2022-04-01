@@ -221,7 +221,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         autoFocus={true}
         value={guess}
         maxLength={6 + spaceCount.current}
-        editable={location?.answer && gameStatus === status.PENDING}
+        editable={gameStatus === status.PENDING}
         onChangeText={(value: string) => {
           value = value
             .toUpperCase()
