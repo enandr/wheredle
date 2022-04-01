@@ -19,7 +19,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "../../components";
 import colorPallete from "../../constants/colors";
 import { GuessableLocation } from "../../constants/types";
-import data from "../../constants/data";
 
 const status = {
   WON: "won",
@@ -38,8 +37,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const spaceCount = useRef<number>(0);
   const [location, setLocation] = useState<GuessableLocation>({
     answer: "",
-    location: "",
     date: "",
+    id: 0,
     image: "../../assets/loading.gif",
   });
   const inputRef = useRef<any>();
@@ -60,6 +59,22 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     }
   };
 
+  const getChallengeFromDate = async (date: string) => {
+    const rawResponse = await fetch(
+      "https://3hvzjclms6.execute-api.us-east-1.amazonaws.com/challenges",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ date }),
+      }
+    );
+    const parsedResponse = await rawResponse.json();
+    return parsedResponse[0];
+  };
+
   const getTodaysDate = () => {
     const today: Date = new Date();
     const yyyy: string = today.getFullYear().toString();
@@ -73,36 +88,34 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   useEffect(() => {
     const fullDate = getTodaysDate();
-    const theLocation: GuessableLocation = data.find((loc) => {
-      return loc?.date === fullDate;
+    getChallengeFromDate(fullDate).then((result: GuessableLocation) => {
+      setLocation(result);
+      getData().then((result) => {
+        if (result !== null && fullDate === result) {
+          return;
+        } else {
+          AsyncStorage.clear();
+        }
+      });
+      inputRef?.current?.focus();
+      intervalRef.current = setInterval(() => {
+        const now = new Date();
+        const hoursleft = 23 - now.getHours();
+        const minutesleft = 59 - now.getMinutes();
+        const secondsleft = 59 - now.getSeconds();
+        let minutesleftString = "";
+        let secondsleftString = "";
+        minutesleft < 10
+          ? (minutesleftString = "0" + minutesleft)
+          : (minutesleftString = "" + minutesleft);
+        secondsleft < 10
+          ? (secondsleftString = "0" + secondsleft)
+          : (secondsleftString = "" + secondsleft);
+        setTimeTillNewGame(
+          `${hoursleft}:${minutesleftString}:${secondsleftString}`
+        );
+      }, 1000);
     });
-
-    getData().then((result) => {
-      if (result !== null && fullDate === result) {
-        return;
-      } else {
-        AsyncStorage.clear();
-      }
-    });
-    setLocation(theLocation);
-    inputRef?.current?.focus();
-    intervalRef.current = setInterval(() => {
-      const now = new Date();
-      const hoursleft = 23 - now.getHours();
-      const minutesleft = 59 - now.getMinutes();
-      const secondsleft = 59 - now.getSeconds();
-      let minutesleftString = "";
-      let secondsleftString = "";
-      minutesleft < 10
-        ? (minutesleftString = "0" + minutesleft)
-        : (minutesleftString = "" + minutesleft);
-      secondsleft < 10
-        ? (secondsleftString = "0" + secondsleft)
-        : (secondsleftString = "" + secondsleft);
-      setTimeTillNewGame(
-        `${hoursleft}:${minutesleftString}:${secondsleftString}`
-      );
-    }, 1000);
   }, []);
 
   useEffect(() => {

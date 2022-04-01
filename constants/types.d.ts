@@ -2,7 +2,7 @@ type GuessableLocation =
   | {
       answer: string;
       image: string;
-      location: string;
+      id: number;
       date: string;
     }
   | undefined;
