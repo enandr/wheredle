@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "../../components";
 import colorPallete from "../../constants/colors";
 import { GuessableLocation } from "../../constants/types";
+import ImageViewer from "react-native-image-zoom-viewer";
 
 const status = {
   WON: "won",
@@ -43,6 +44,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   });
   const inputRef = useRef<any>();
   const intervalRef = useRef<any>();
+  const [showZoomImageModal, setShowZoomImageModal] = useState(false);
 
   const getData = async () => {
     try {
@@ -351,11 +353,35 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               >
                 <Text style={styles.helpText}>How To Play?</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowZoomImageModal(true);
+                }}
+              >
+                <Image
+                  style={{ width: "100%", minHeight: 300 }}
+                  source={{ uri: location?.image }}
+                />
+              </TouchableOpacity>
 
-              <Image
-                style={{ width: "100%", minHeight: 300 }}
-                source={{ uri: location?.image }}
-              />
+              <Modal visible={showZoomImageModal} transparent={true}>
+                <ImageViewer
+                  enableSwipeDown
+                  saveToLocalByLongPress={false}
+                  onSwipeDown={() => {
+                    setShowZoomImageModal(false);
+                  }}
+                  imageUrls={[
+                    {
+                      // Simplest usage.
+                      url: location?.image as string,
+                      props: {
+                        style: { width: "100%", minHeight: 300 },
+                      },
+                    },
+                  ]}
+                />
+              </Modal>
               {gameStatus === status.PENDING ? gameInputArea : gameCompleteArea}
 
               <Modal
@@ -384,14 +410,20 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                       Type In Your Guess
                     </Text>
                     <Text style={{ color: colorPallete.textLight }}>
-                      A RED Letter Means That Letter Is NOT In The Word
+                      A <Text style={styles.wrong}>RED</Text> Letter Means That
+                      Letter Is NOT In The Word
                     </Text>
                     <Text style={{ color: colorPallete.textLight }}>
-                      An ORANGE Letter Means That Letter Is In The Word But
-                      Wrong Spot
+                      An <Text style={styles.wrongLocation}>ORANGE</Text> Letter
+                      Means That Letter Is In The Word But Wrong Spot
                     </Text>
                     <Text style={{ color: colorPallete.textLight }}>
-                      A GREEN Letter Means That Letter Is Correct
+                      A <Text style={styles.correct}>GREEN</Text> Letter Means
+                      That Letter Is Correct
+                    </Text>
+                    <Text style={{ color: colorPallete.textLight }}>
+                      You Can Tap On The Image To Open A Pop-Up To Zoom On The
+                      Image. Swipe Down To Close The Image
                     </Text>
                     <Text style={{ color: colorPallete.textLight }}>
                       You Can Play Once Daily And Have 6 Tries To Win
