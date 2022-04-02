@@ -18,7 +18,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.enandr.wheredle"
+      "bundleIdentifier": "com.enandr.wheredle",
+      "buildNumber": "1.0.1"
     },
     "android": {
       "versionCode": 10,
