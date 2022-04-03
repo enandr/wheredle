@@ -89,17 +89,20 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     return fullDate;
   };
 
+  const checkIfPlayedToday = async (fullDate: string) => {
+    return fullDate === (await AsyncStorage.getItem("lastPlayed"));
+  };
   useEffect(() => {
     const fullDate = getTodaysDate();
+    checkIfPlayedToday(fullDate).then((res) => {
+      if (!res) {
+        AsyncStorage.clear();
+      } else {
+      }
+    });
     getChallengeFromDate(fullDate).then((result: GuessableLocation) => {
       setLocation(result);
-      getData().then((result) => {
-        if (result !== null && fullDate === result) {
-          return;
-        } else {
-          AsyncStorage.clear();
-        }
-      });
+      getData();
       inputRef?.current?.focus();
       intervalRef.current = setInterval(() => {
         const now = new Date();
