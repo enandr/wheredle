@@ -3,6 +3,7 @@ import {
   Alert,
   Image,
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   SafeAreaView,
@@ -13,7 +14,6 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -131,66 +131,107 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     }
   }, [guess]);
 
-  const onSubmit = () => {
+  const checkIfInputIsRealCity = async (city: string) => {
+    return await fetch(
+      "https://3hvzjclms6.execute-api.us-east-1.amazonaws.com/checkcity",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ city }),
+      }
+    );
+  };
+  const onSubmit = async () => {
     Keyboard.dismiss();
-    const guessAccuracy = [];
-    const newGuessHistory = [];
-    let totalCorrect = 0;
-    const currentGuess = guess.toUpperCase().replace(/[^A-Z]/g, "");
-    let locationDuringGuess = location?.answer as string;
-    for (let i = 0; i < 6; i++) {
-      if (currentGuess[i] === locationDuringGuess[i]) {
-        guessAccuracy.push({ guess: currentGuess[i], accuracy: "correct" });
-        locationDuringGuess = locationDuringGuess.replace(currentGuess[i], " ");
-        totalCorrect += 1;
-      } else if (locationDuringGuess.includes(guess[i])) {
-        guessAccuracy.push({
-          guess: currentGuess[i],
-          accuracy: "wrongLocation",
-        });
-        locationDuringGuess = locationDuringGuess.replace(currentGuess[i], " ");
-      } else {
-        guessAccuracy.push({ guess: currentGuess[i], accuracy: "wrong" });
-      }
-    }
-    guessHistory.push(guessAccuracy);
-    setGuess("");
-    spaceCount.current = 0;
-    guessLength.current = 0;
-    totalGuesses.current += 1;
-    if (totalCorrect === 6) {
-      setGameStatus(status.WON);
-      AsyncStorage.setItem("gameStatus", status.WON);
-      AsyncStorage.setItem("totalGuesses", totalGuesses.current + "");
-      AsyncStorage.setItem("correctAnswer", location?.answer || "");
-      AsyncStorage.setItem("lastPlayed", getTodaysDate());
-      Alert.alert(
-        "Congrats!!",
-        `You Won After ${totalGuesses.current} Guesses.`,
-        [{ text: "Close" }, { text: "Share", onPress: onShare }]
-      );
-      //navigation.navigate('Win');
-      return;
-    }
-    if (totalCorrect !== 6 && totalGuesses.current === 6) {
-      setGameStatus(status.LOST);
-      AsyncStorage.setItem("gameStatus", status.LOST);
-      AsyncStorage.setItem("totalGuesses", totalGuesses.current + "");
-      AsyncStorage.setItem("correctAnswer", location?.answer || "");
-      AsyncStorage.setItem("lastPlayed", getTodaysDate());
-      Alert.alert(
-        "Better Luck Next Time",
-        `You Lost After ${totalGuesses.current} Guesses.`,
-        [{ text: "Close" }, { text: "Share", onPress: onShare }]
-      );
-      //navigation.navigate('Win');
-      return;
-    }
-    setTimeout(() => {
-      if (gameStatus === status.PENDING) {
-        inputRef?.current?.focus();
-      }
-    }, 100);
+    checkIfInputIsRealCity(guess)
+      .then((result) => result.json())
+      .then((res) => {
+        if (res) {
+          const guessAccuracy = [];
+          const newGuessHistory = [];
+          let totalCorrect = 0;
+          const currentGuess = guess.toUpperCase().replace(/[^A-Z]/g, "");
+          let locationDuringGuess = location?.answer as string;
+          for (let i = 0; i < 6; i++) {
+            if (currentGuess[i] === locationDuringGuess[i]) {
+              guessAccuracy.push({
+                guess: currentGuess[i],
+                accuracy: "correct",
+              });
+              locationDuringGuess = locationDuringGuess.replace(
+                currentGuess[i],
+                " "
+              );
+              totalCorrect += 1;
+            } else if (locationDuringGuess.includes(guess[i])) {
+              guessAccuracy.push({
+                guess: currentGuess[i],
+                accuracy: "wrongLocation",
+              });
+              locationDuringGuess = locationDuringGuess.replace(
+                currentGuess[i],
+                " "
+              );
+            } else {
+              guessAccuracy.push({ guess: currentGuess[i], accuracy: "wrong" });
+            }
+          }
+          guessHistory.push(guessAccuracy);
+          setGuess("");
+          spaceCount.current = 0;
+          guessLength.current = 0;
+          totalGuesses.current += 1;
+          if (totalCorrect === 6) {
+            setGameStatus(status.WON);
+            AsyncStorage.setItem("gameStatus", status.WON);
+            AsyncStorage.setItem("totalGuesses", totalGuesses.current + "");
+            AsyncStorage.setItem("correctAnswer", location?.answer || "");
+            AsyncStorage.setItem("lastPlayed", getTodaysDate());
+            Alert.alert(
+              "Congrats!!",
+              `You Won After ${totalGuesses.current} Guesses.`,
+              [{ text: "Close" }, { text: "Share", onPress: onShare }]
+            );
+            //navigation.navigate('Win');
+            return;
+          }
+          if (totalCorrect !== 6 && totalGuesses.current === 6) {
+            setGameStatus(status.LOST);
+            AsyncStorage.setItem("gameStatus", status.LOST);
+            AsyncStorage.setItem("totalGuesses", totalGuesses.current + "");
+            AsyncStorage.setItem("correctAnswer", location?.answer || "");
+            AsyncStorage.setItem("lastPlayed", getTodaysDate());
+            Alert.alert(
+              "Better Luck Next Time",
+              `You Lost After ${totalGuesses.current} Guesses.`,
+              [{ text: "Close" }, { text: "Share", onPress: onShare }]
+            );
+            //navigation.navigate('Win');
+            return;
+          }
+          setTimeout(() => {
+            if (gameStatus === status.PENDING) {
+              inputRef?.current?.focus();
+            }
+          }, 100);
+        } else {
+          if (Platform.OS !== "web") {
+            Alert.alert(`${guess} might not be a real city. please try again`);
+          } else {
+            alert(`${guess} might not be a real city. please try again`);
+          }
+
+          setGuess("");
+          setTimeout(() => {
+            if (gameStatus === status.PENDING) {
+              inputRef?.current?.focus();
+            }
+          }, 100);
+        }
+      });
   };
 
   const onShare = async () => {
