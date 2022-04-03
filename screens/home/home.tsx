@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -136,15 +137,18 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     const newGuessHistory = [];
     let totalCorrect = 0;
     const currentGuess = guess.toUpperCase().replace(/[^A-Z]/g, "");
+    let locationDuringGuess = location?.answer as string;
     for (let i = 0; i < 6; i++) {
-      if (currentGuess[i] === location?.answer[i]) {
+      if (currentGuess[i] === locationDuringGuess[i]) {
         guessAccuracy.push({ guess: currentGuess[i], accuracy: "correct" });
+        locationDuringGuess = locationDuringGuess.replace(currentGuess[i], " ");
         totalCorrect += 1;
-      } else if (location?.answer.includes(guess[i])) {
+      } else if (locationDuringGuess.includes(guess[i])) {
         guessAccuracy.push({
           guess: currentGuess[i],
           accuracy: "wrongLocation",
         });
+        locationDuringGuess = locationDuringGuess.replace(currentGuess[i], " ");
       } else {
         guessAccuracy.push({ guess: currentGuess[i], accuracy: "wrong" });
       }
@@ -208,8 +212,14 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       })
       .join("\n");
     try {
+      const shareMessageLine1 = `Wheredle: ${totalGuesses.current}/6 guesses\n`;
+      const shareMessageLine2 = `${getTodaysDate()}\n`;
+      const shareMessageLine3 = `${toShare}\n`;
+      const shareMessageLine4 = `Play At wheredle.rogerenand.com\n`;
+      const shareMessageLine5 = `Or find it in the app store and google play store`;
+
       const result = await Share.share({
-        message: toShare,
+        message: `${shareMessageLine1}${shareMessageLine2}${shareMessageLine3}${shareMessageLine4}${shareMessageLine5}`,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
@@ -275,14 +285,49 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             index: number
           ) => {
             return (
-              <Text key={index} style={styles.text}>
-                <Text style={styles[guess[0].accuracy]}>{guess[0].guess}</Text>
-                <Text style={styles[guess[1].accuracy]}>{guess[1].guess}</Text>
-                <Text style={styles[guess[2].accuracy]}>{guess[2].guess}</Text>
-                <Text style={styles[guess[3].accuracy]}>{guess[3].guess}</Text>
-                <Text style={styles[guess[4].accuracy]}>{guess[4].guess}</Text>
-                <Text style={styles[guess[5].accuracy]}>{guess[5].guess}</Text>
-              </Text>
+              <View key={index} style={styles.map}>
+                <View style={styles.row}>
+                  <View style={[styles.cell, styles[guess[0].accuracy]]}>
+                    <Text style={styles.cellText}>{guess[0].guess}</Text>
+                  </View>
+                  <View style={[styles.cell, styles[guess[1].accuracy]]}>
+                    <Text style={styles.cellText}>{guess[1].guess}</Text>
+                  </View>
+                  <View style={[styles.cell, styles[guess[2].accuracy]]}>
+                    <Text style={styles.cellText}>{guess[2].guess}</Text>
+                  </View>
+                  <View style={[styles.cell, styles[guess[3].accuracy]]}>
+                    <Text style={styles.cellText}>{guess[3].guess}</Text>
+                  </View>
+                  <View style={[styles.cell, styles[guess[4].accuracy]]}>
+                    <Text style={styles.cellText}>{guess[4].guess}</Text>
+                  </View>
+                  <View style={[styles.cell, styles[guess[5].accuracy]]}>
+                    <Text style={styles.cellText}>{guess[5].guess}</Text>
+                  </View>
+                </View>
+              </View>
+
+              /*<Text key={index} style={styles.text}>
+                <Text style={[styles.guessTile, styles[guess[0].accuracy]]}>
+                  {guess[0].guess}
+                </Text>
+                <Text style={[styles.guessTile, styles[guess[1].accuracy]]}>
+                  {guess[1].guess}
+                </Text>
+                <Text style={[styles.guessTile, styles[guess[2].accuracy]]}>
+                  {guess[2].guess}
+                </Text>
+                <Text style={[styles.guessTile, styles[guess[3].accuracy]]}>
+                  {guess[3].guess}
+                </Text>
+                <Text style={[styles.guessTile, styles[guess[4].accuracy]]}>
+                  {guess[4].guess}
+                </Text>
+                <Text style={[styles.guessTile, styles[guess[5].accuracy]]}>
+                  {guess[5].guess}
+                </Text>
+              </Text>*/
             );
           }
         )}
@@ -336,109 +381,114 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     <SafeAreaView style={[styles.container]}>
       <View style={{ height: "100%" }}>
         <ScrollView style={{ paddingHorizontal: 20 }}>
-          <TouchableWithoutFeedback
-            onPress={() => {
-              if (Platform.OS === "web") {
-                inputRef?.current?.focus();
-              } else {
-                inputRef?.current?.blur();
-              }
-            }}
-          >
-            <View style={[styles.container]}>
-              <TouchableOpacity
-                onPress={() => {
-                  setModalVisible(true);
-                }}
-              >
-                <Text style={styles.helpText}>How To Play?</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowZoomImageModal(true);
-                }}
-              >
-                <Image
-                  style={{ width: "100%", minHeight: 300 }}
-                  source={{ uri: location?.image }}
-                />
-              </TouchableOpacity>
-
-              <Modal visible={showZoomImageModal} transparent={true}>
-                <ImageViewer
-                  enableSwipeDown
-                  saveToLocalByLongPress={false}
-                  onSwipeDown={() => {
-                    setShowZoomImageModal(false);
+          <KeyboardAvoidingView>
+            <TouchableWithoutFeedback
+              onPress={() => {
+                if (Platform.OS === "web") {
+                  inputRef?.current?.focus();
+                } else {
+                  inputRef?.current?.blur();
+                }
+              }}
+            >
+              <View style={[styles.container]}>
+                <Text style={styles.title}>WHEREDLE</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setModalVisible(true);
                   }}
-                  imageUrls={[
-                    {
-                      // Simplest usage.
-                      url: location?.image as string,
-                      props: {
-                        style: { width: "100%", minHeight: 300 },
-                      },
-                    },
-                  ]}
-                />
-              </Modal>
-              {gameStatus === status.PENDING ? gameInputArea : gameCompleteArea}
-
-              <Modal
-                animationType="slide"
-                transparent={false}
-                visible={modalVisible}
-                onDismiss={() => {}}
-              >
-                <View
-                  style={[
-                    styles.container,
-                    Platform.OS === "ios" ? { paddingTop: 50 } : null,
-                  ]}
                 >
-                  <View>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      Welcome To Where-dle
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      HOW TO PLAY:
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      Each City Is 6 Letters Long
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      Type In Your Guess
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      A <Text style={styles.wrong}>RED</Text> Letter Means That
-                      Letter Is NOT In The Word
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      An <Text style={styles.wrongLocation}>ORANGE</Text> Letter
-                      Means That Letter Is In The Word But Wrong Spot
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      A <Text style={styles.correct}>GREEN</Text> Letter Means
-                      That Letter Is Correct
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      You Can Tap On The Image To Open A Pop-Up To Zoom On The
-                      Image. Swipe Down To Close The Image
-                    </Text>
-                    <Text style={{ color: colorPallete.textLight }}>
-                      You Can Play Once Daily And Have 6 Tries To Win
-                    </Text>
-                    <Button
-                      text={"Close Help"}
-                      onPress={() => {
-                        setModalVisible(false);
-                      }}
-                    />
+                  <Text style={styles.helpText}>How To Play?</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowZoomImageModal(true);
+                  }}
+                >
+                  <Image
+                    style={{ width: "100%", minHeight: 300 }}
+                    source={{ uri: location?.image }}
+                  />
+                </TouchableOpacity>
+
+                <Modal visible={showZoomImageModal} transparent={true}>
+                  <ImageViewer
+                    enableSwipeDown
+                    saveToLocalByLongPress={false}
+                    onSwipeDown={() => {
+                      setShowZoomImageModal(false);
+                    }}
+                    imageUrls={[
+                      {
+                        // Simplest usage.
+                        url: location?.image as string,
+                        props: {
+                          style: { width: "100%", minHeight: 300 },
+                        },
+                      },
+                    ]}
+                  />
+                </Modal>
+                {gameStatus === status.PENDING
+                  ? gameInputArea
+                  : gameCompleteArea}
+
+                <Modal
+                  animationType="slide"
+                  transparent={false}
+                  visible={modalVisible}
+                  onDismiss={() => {}}
+                >
+                  <View
+                    style={[
+                      styles.container,
+                      Platform.OS === "ios" ? { paddingTop: 50 } : null,
+                    ]}
+                  >
+                    <View>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        Welcome To Where-dle
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        HOW TO PLAY:
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        Each City Is 6 Letters Long
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        Type In Your Guess
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        A <Text style={styles.wrong}>RED</Text> Letter Means
+                        That Letter Is NOT In The Word
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        An <Text style={styles.wrongLocation}>ORANGE</Text>{" "}
+                        Letter Means That Letter Is In The Word But Wrong Spot
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        A <Text style={styles.correct}>GREEN</Text> Letter Means
+                        That Letter Is Correct
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        You Can Tap On The Image To Open A Pop-Up To Zoom On The
+                        Image. Swipe Down To Close The Image
+                      </Text>
+                      <Text style={{ color: colorPallete.textLight }}>
+                        You Can Play Once Daily And Have 6 Tries To Win
+                      </Text>
+                      <Button
+                        text={"Close Help"}
+                        onPress={() => {
+                          setModalVisible(false);
+                        }}
+                      />
+                    </View>
                   </View>
-                </View>
-              </Modal>
-            </View>
-          </TouchableWithoutFeedback>
+                </Modal>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -450,6 +500,34 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 20,
     backgroundColor: colorPallete.darkGrey,
+  },
+  title: {
+    color: "lightgrey",
+    fontSize: 32,
+    fontWeight: "bold",
+    letterSpacing: 7,
+    textAlign: "center",
+  },
+  map: {
+    alignSelf: "stretch",
+  },
+  row: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+  },
+  cell: {
+    borderWidth: 3,
+    borderColor: "grey",
+    flex: 1,
+    aspectRatio: 1,
+    margin: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cellText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 30,
   },
   text: {
     fontSize: 30,
@@ -473,14 +551,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colorPallete.black,
   },
+  guessTile: {
+    width: 10,
+    padding: 10,
+    borderColor: "grey",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   correct: {
-    color: "green",
+    backgroundColor: "green",
   },
   wrongLocation: {
-    color: "orange",
+    backgroundColor: "orange",
   },
   wrong: {
-    color: "red",
+    backgroundColor: "red",
   },
   helpText: {
     alignSelf: "center",
