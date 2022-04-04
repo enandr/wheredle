@@ -92,6 +92,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const checkIfPlayedToday = async (fullDate: string) => {
     return fullDate === (await AsyncStorage.getItem("lastPlayed"));
   };
+
   useEffect(() => {
     const fullDate = getTodaysDate();
     checkIfPlayedToday(fullDate).then((res) => {
@@ -99,28 +100,28 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         AsyncStorage.clear();
       } else {
       }
-    });
-    getChallengeFromDate(fullDate).then((result: GuessableLocation) => {
-      setLocation(result);
-      getData();
-      inputRef?.current?.focus();
-      intervalRef.current = setInterval(() => {
-        const now = new Date();
-        const hoursleft = 23 - now.getHours();
-        const minutesleft = 59 - now.getMinutes();
-        const secondsleft = 59 - now.getSeconds();
-        let minutesleftString = "";
-        let secondsleftString = "";
-        minutesleft < 10
-          ? (minutesleftString = "0" + minutesleft)
-          : (minutesleftString = "" + minutesleft);
-        secondsleft < 10
-          ? (secondsleftString = "0" + secondsleft)
-          : (secondsleftString = "" + secondsleft);
-        setTimeTillNewGame(
-          `${hoursleft}:${minutesleftString}:${secondsleftString}`
-        );
-      }, 1000);
+      getChallengeFromDate(fullDate).then((result: GuessableLocation) => {
+        setLocation(result);
+        getData();
+        inputRef?.current?.focus();
+        intervalRef.current = setInterval(() => {
+          const now = new Date();
+          const hoursleft = 23 - now.getHours();
+          const minutesleft = 59 - now.getMinutes();
+          const secondsleft = 59 - now.getSeconds();
+          let minutesleftString = "";
+          let secondsleftString = "";
+          minutesleft < 10
+            ? (minutesleftString = "0" + minutesleft)
+            : (minutesleftString = "" + minutesleft);
+          secondsleft < 10
+            ? (secondsleftString = "0" + secondsleft)
+            : (secondsleftString = "" + secondsleft);
+          setTimeTillNewGame(
+            `${hoursleft}:${minutesleftString}:${secondsleftString}`
+          );
+        }, 1000);
+      });
     });
   }, []);
 
@@ -158,6 +159,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           let totalCorrect = 0;
           const currentGuess = guess.toUpperCase().replace(/[^A-Z]/g, "");
           let locationDuringGuess = location?.answer as string;
+          console.log(currentGuess, locationDuringGuess);
           for (let i = 0; i < 6; i++) {
             if (currentGuess[i] === locationDuringGuess[i]) {
               guessAccuracy.push({
@@ -169,7 +171,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 " "
               );
               totalCorrect += 1;
-            } else if (locationDuringGuess.includes(guess[i])) {
+            } else if (locationDuringGuess.includes(currentGuess[i])) {
               guessAccuracy.push({
                 guess: currentGuess[i],
                 accuracy: "wrongLocation",
