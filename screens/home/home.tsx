@@ -106,7 +106,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     setOrangeCaps([]);
     setGreyCaps([]);
     const showSubscription = Keyboard.addListener("keyboardWillShow", () => {
-      Keyboard.dismiss();
+      Platform.OS !== "web" ? Keyboard.dismiss() : null;
     });
     const fullDate = getTodaysDate();
     checkIfPlayedToday(fullDate).then((res) => {
