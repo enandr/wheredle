@@ -5,6 +5,7 @@ import {
   Pressable,
   View,
   Dimensions,
+  Platform,
 } from "react-native";
 import React from "react";
 import colorPallete from "../constants/colors";
@@ -30,7 +31,12 @@ export default function Keyboard(props: {
     return "grey";
   };
   return (
-    <View style={[styles.keyboard, styles.showKeyboard]}>
+    <View
+      style={[
+        styles.keyboard,
+        Platform.OS !== "web" ? styles.showKeyboard : styles.hideKeyboard,
+      ]}
+    >
       {keys.map((keyRow, i) => (
         <View style={styles.row} key={`row-${i}`}>
           {keyRow.map((key) => (
