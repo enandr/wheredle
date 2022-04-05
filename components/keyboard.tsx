@@ -34,7 +34,7 @@ export default function Keyboard(props: {
     <View
       style={[
         styles.keyboard,
-        Platform.OS !== "web" ? styles.showKeyboard : styles.hideKeyboard,
+        /*Platform.OS !== "web" ? */ styles.showKeyboard /* : styles.hideKeyboard*/,
       ]}
     >
       {keys.map((keyRow, i) => (
@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
     display: "none",
   },
   showKeyboard: {
+    display: "flex",
     position: "absolute",
     bottom: 0,
   },
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor: colorPallete.grey,
     justifyContent: "center",
     alignItems: "center",
+    maxHeight: 50,
   },
   keyText: {
     color: colorPallete.textLight,
