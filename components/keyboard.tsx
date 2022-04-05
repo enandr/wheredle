@@ -14,8 +14,9 @@ export default function Keyboard(props: {
   greenCaps: string[];
   orangeCaps: string[];
   greyCaps: string[];
+  visible: boolean;
 }) {
-  const getKeyBGColor = (key) => {
+  const getKeyBGColor = (key: string) => {
     key = key.toUpperCase();
     if (props.greenCaps.includes(key)) {
       return "green";
@@ -29,7 +30,7 @@ export default function Keyboard(props: {
     return "grey";
   };
   return (
-    <View style={styles.keyboard}>
+    <View style={[styles.keyboard, styles.showKeyboard]}>
       {keys.map((keyRow, i) => (
         <View style={styles.row} key={`row-${i}`}>
           {keyRow.map((key) => (
@@ -66,6 +67,14 @@ const styles = StyleSheet.create({
   keyboard: {
     alignSelf: "stretch",
     marginTop: "auto",
+    backgroundColor: "#191919",
+  },
+  hideKeyboard: {
+    display: "none",
+  },
+  showKeyboard: {
+    position: "absolute",
+    bottom: 0,
   },
   row: {
     alignSelf: "stretch",
