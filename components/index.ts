@@ -1,5 +1,3 @@
-import Button from './button';
-
-export {
-    Button
-}
+import Button from "./button";
+import Keyboard from "./keyboard";
+export { Button, Keyboard };

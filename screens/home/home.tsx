@@ -15,12 +15,14 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Button } from "../../components";
+import { Button, Keyboard as CustomKeyboard } from "../../components";
 import colorPallete from "../../constants/colors";
 import { GuessableLocation } from "../../constants/types";
 import ImageViewer from "react-native-image-zoom-viewer";
+import Autocomplete from "react-native-autocomplete-input";
 
 const status = {
   WON: "won",
@@ -30,6 +32,11 @@ const status = {
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [guess, setGuess] = useState("");
+  const [autoCompleteData, setAutoCompleteData] = useState([]);
+  const [greenCaps, setGreenCaps] = useState([""]);
+  const [orangeCaps, setOrangeCaps] = useState([""]);
+  const [greyCaps, setGreyCaps] = useState([""]);
+  const [autoCompleteQuery, setAutoCompleteQuery] = useState("");
   const [guessHistory, setGuessHistory] = useState<any[]>([]);
   const [gameStatus, setGameStatus] = useState(status.PENDING);
   const [canGuess, setCanGuess] = useState(false);
@@ -94,6 +101,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   };
 
   useEffect(() => {
+    setGreenCaps([]);
+    setOrangeCaps([]);
+    setGreyCaps([]);
     const fullDate = getTodaysDate();
     checkIfPlayedToday(fullDate).then((res) => {
       if (!res) {
@@ -131,9 +141,34 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     if (guessLength.current === 6 && gameStatus === status.PENDING) {
       setCanGuess(true);
     } else {
+      setAutoCompleteQuery(guess);
+      setGuess(guess.slice(0, 6 + spaceCount.current));
       setCanGuess(false);
     }
   }, [guess]);
+
+  useEffect(() => {
+    const check = autoCompleteQuery.toUpperCase().replace(/[^A-Z]/g, "");
+    if (check === "" || check.length === 6) {
+      setAutoCompleteData([]);
+    } else {
+      fetch(
+        "https://3hvzjclms6.execute-api.us-east-1.amazonaws.com/autocomplete",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ city: autoCompleteQuery }),
+        }
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          setAutoCompleteData(res);
+        });
+    }
+  }, [autoCompleteQuery]);
 
   const checkIfInputIsRealCity = async (city: string) => {
     return await fetch(
@@ -148,6 +183,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       }
     );
   };
+
   const onSubmit = async () => {
     Keyboard.dismiss();
     checkIfInputIsRealCity(guess)
@@ -159,13 +195,19 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           let totalCorrect = 0;
           const currentGuess = guess.toUpperCase().replace(/[^A-Z]/g, "");
           let locationDuringGuess = location?.answer as string;
-          console.log(currentGuess, locationDuringGuess);
+
           for (let i = 0; i < 6; i++) {
             if (currentGuess[i] === locationDuringGuess[i]) {
               guessAccuracy.push({
                 guess: currentGuess[i],
                 accuracy: "correct",
               });
+              greenCaps.push(currentGuess[i]);
+              /*if (!greenCaps.includes(currentGuess[i])) {
+                const newGreenCaps = greenCaps;
+                newGreenCaps.push(currentGuess[i]);
+                setGreenCaps(newGreenCaps);
+              }*/
               locationDuringGuess = locationDuringGuess.replace(
                 currentGuess[i],
                 " "
@@ -176,11 +218,23 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 guess: currentGuess[i],
                 accuracy: "wrongLocation",
               });
+              orangeCaps.push(currentGuess[i]);
+              /*if (!orangeCaps.includes(currentGuess[i])) {
+                const newOrangeCaps = orangeCaps;
+                newOrangeCaps.push(currentGuess[i]);
+                setGreenCaps(newOrangeCaps);
+              }*/
               locationDuringGuess = locationDuringGuess.replace(
                 currentGuess[i],
                 " "
               );
             } else {
+              greyCaps.push(currentGuess[i]);
+              /*if (!greyCaps.includes(currentGuess[i])) {
+                const newGreyCaps = greyCaps;
+                newGreyCaps.push(currentGuess[i]);
+                setGreenCaps(newGreyCaps);
+              }*/
               guessAccuracy.push({ guess: currentGuess[i], accuracy: "wrong" });
             }
           }
@@ -283,7 +337,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   const gameInputArea = (
     <View>
-      <TextInput
+      {/*<TextInput
         ref={inputRef}
         style={styles.input}
         placeholder={"Guess The Location"}
@@ -310,6 +364,57 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               }, 100);
             }
           }
+        }}
+      />*/}
+      <Autocomplete
+        data={autoCompleteData}
+        value={autoCompleteQuery}
+        onChangeText={(text: string) => setAutoCompleteQuery(text)}
+        renderTextInput={() => (
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            placeholder={"Guess The Location"}
+            placeholderTextColor={"#808e9b"}
+            autoCapitalize={"characters"}
+            autoFocus={true}
+            value={guess}
+            maxLength={6 + spaceCount.current}
+            editable={gameStatus === status.PENDING}
+            onChangeText={(value: string) => {
+              value = value
+                .toUpperCase()
+                .slice(0, 6 + spaceCount.current)
+                .replace(/[^A-Z ]/g, "");
+              setGuess(value);
+            }}
+            onKeyPress={(e: any) => {
+              if (e.keyCode === 13 && canGuess) {
+                if (guess.length == 6) {
+                  onSubmit();
+                } else {
+                  setTimeout(() => {
+                    inputRef?.current?.focus();
+                  }, 100);
+                }
+              }
+            }}
+          />
+        )}
+        flatListProps={{
+          keyExtractor: (_: any, idx: any) => idx,
+          renderItem: ({ item }: { item: string }) => (
+            //you can change the view you want to show in suggestions
+            <TouchableOpacity
+              onPress={() => {
+                setGuess(item);
+                setAutoCompleteQuery(item);
+                setAutoCompleteData([]);
+              }}
+            >
+              <Text>{item}</Text>
+            </TouchableOpacity>
+          ),
         }}
       />
       <Button
@@ -353,27 +458,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   </View>
                 </View>
               </View>
-
-              /*<Text key={index} style={styles.text}>
-                <Text style={[styles.guessTile, styles[guess[0].accuracy]]}>
-                  {guess[0].guess}
-                </Text>
-                <Text style={[styles.guessTile, styles[guess[1].accuracy]]}>
-                  {guess[1].guess}
-                </Text>
-                <Text style={[styles.guessTile, styles[guess[2].accuracy]]}>
-                  {guess[2].guess}
-                </Text>
-                <Text style={[styles.guessTile, styles[guess[3].accuracy]]}>
-                  {guess[3].guess}
-                </Text>
-                <Text style={[styles.guessTile, styles[guess[4].accuracy]]}>
-                  {guess[4].guess}
-                </Text>
-                <Text style={[styles.guessTile, styles[guess[5].accuracy]]}>
-                  {guess[5].guess}
-                </Text>
-              </Text>*/
             );
           }
         )}
@@ -535,6 +619,19 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               </View>
             </TouchableWithoutFeedback>
           </KeyboardAvoidingView>
+          {/*<CustomKeyboard
+            onKeyPressed={(key) => {
+              if (key !== "ENTER" && key !== "CLEAR") {
+                setGuess(guess + key);
+              }
+              if (key === "CLEAR") {
+                setGuess("");
+              }
+            }}
+            greenCaps={greenCaps}
+            orangeCaps={orangeCaps}
+            greyCaps={greyCaps}
+          />*/}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -612,7 +709,7 @@ const styles = StyleSheet.create({
     backgroundColor: "orange",
   },
   wrong: {
-    backgroundColor: "red",
+    backgroundColor: "#282828",
   },
   helpText: {
     alignSelf: "center",
