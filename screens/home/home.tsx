@@ -31,6 +31,7 @@ const status = {
 };
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(false);
   const [guess, setGuess] = useState("");
   const [autoCompleteData, setAutoCompleteData] = useState([]);
   const [greenCaps, setGreenCaps] = useState([""]);
@@ -104,6 +105,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     setGreenCaps([]);
     setOrangeCaps([]);
     setGreyCaps([]);
+    const showSubscription = Keyboard.addListener("keyboardWillShow", () => {
+      Keyboard.dismiss();
+    });
     const fullDate = getTodaysDate();
     checkIfPlayedToday(fullDate).then((res) => {
       if (!res) {
@@ -133,6 +137,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         }, 1000);
       });
     });
+    return () => {
+      showSubscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -619,20 +626,21 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               </View>
             </TouchableWithoutFeedback>
           </KeyboardAvoidingView>
-          {/*<CustomKeyboard
-            onKeyPressed={(key) => {
-              if (key !== "ENTER" && key !== "CLEAR") {
-                setGuess(guess + key);
-              }
-              if (key === "CLEAR") {
-                setGuess("");
-              }
-            }}
-            greenCaps={greenCaps}
-            orangeCaps={orangeCaps}
-            greyCaps={greyCaps}
-          />*/}
         </ScrollView>
+        <CustomKeyboard
+          visible={showKeyboard}
+          onKeyPressed={(key) => {
+            if (key !== "ENTER" && key !== "CLEAR") {
+              setGuess(guess + key);
+            }
+            if (key === "CLEAR") {
+              setGuess("");
+            }
+          }}
+          greenCaps={greenCaps}
+          orangeCaps={orangeCaps}
+          greyCaps={greyCaps}
+        />
       </View>
     </SafeAreaView>
   );
@@ -643,6 +651,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 20,
     backgroundColor: colorPallete.darkGrey,
+    paddingBottom: 200,
   },
   title: {
     color: "lightgrey",
